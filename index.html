@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>RFID Toolbox Log Reader</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #00ff00; }
+    button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; }
+    #log { white-space: pre; background: #000; padding: 10px; margin-top: 20px; min-height: 200px; max-height: 400px; overflow-y: auto; }
+    #status { color: #ffff00; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h2>🧰 RFID Toolbox - BLE Log Reader</h2>
+  <button onclick="connect()">🔗 Connect to RFID-Toolbox</button>
+  <button onclick="readLog()">📥 Read Log CSV（快速，最新 512 bytes）</button>
+  <button id="dumpBtn" onclick="dumpFullLog()">📦 Dump Full Log（完整歷史，Notify 推送）</button>
+  <button onclick="copyLog()">📋 複製結果</button>
+  <button onclick="clearDeviceLog()">🗑 清除裝置記錄</button>
+  <button onclick="clearLog()">🧹 Clear Display</button>
+  <div id="status">Not connected</div>
+  <div id="log">Log will appear here...</div>
+  <script>
+    const SERVICE_UUID     = '12345678-1234-1234-1234-123456789abc';
+    const CHAR_READ_UUID   = '12345678-1234-1234-1234-123456789ab1';
+    const CHAR_NOTIFY_UUID = '12345678-1234-1234-1234-123456789ab2';
+    const CHAR_DUMP_UUID   = '12345678-1234-1234-1234-123456789ab3';
+    const CHAR_CMD_UUID    = '12345678-1234-1234-1234-123456789ab4';
+
+    let device, server, service, readChar, notifyChar, dumpChar, cmdChar;
+    let dumpBuffer = [];
+    let dumpExpectedSize = 0;
+    let dumpReceivedSize = 0;
+    let dumpInProgressUI = false;
+
+    async function connect() {
+      try {
+        device = await navigator.bluetooth.requestDevice({
+          filters: [{ name: 'RFID-Toolbox' }],
+          optionalServices: [SERVICE_UUID]
+        });
+        server  = await device.gatt.connect();
+        service = await server.getPrimaryService(SERVICE_UUID);
+
+        readChar   = await service.getCharacteristic(CHAR_READ_UUID);
+        notifyChar = await service.getCharacteristic(CHAR_NOTIFY_UUID);
+        dumpChar   = await service.getCharacteristic(CHAR_DUMP_UUID);
+        cmdChar    = await service.getCharacteristic(CHAR_CMD_UUID);
+
+        await notifyChar.startNotifications();
+        notifyChar.addEventListener('characteristicvaluechanged', (e) => {
+          const msg = new TextDecoder().decode(e.target.value);
+          document.getElementById('log').textContent += '\n[EVENT] ' + msg;
+          if (msg === 'LOG_CLEARED') {
+            document.getElementById('status').textContent = '✅ 裝置記錄已清除';
+          }
+        });
+
+        await dumpChar.startNotifications();
+        dumpChar.addEventListener('characteristicvaluechanged', onDumpChunk);
+
+        document.getElementById('status').textContent = '✅ Connected to ' + device.name;
+      } catch (e) {
+        document.getElementById('status').textContent = '❌ Error: ' + e;
+      }
+    }
+
+    async function readLog() {
+      if (!readChar) { alert('Not connected!'); return; }
+      try {
+        const value = await readChar.readValue();
+        document.getElementById('log').textContent = new TextDecoder().decode(value);
+      } catch (e) {
+        document.getElementById('status').textContent = '❌ Read error: ' + e;
+      }
+    }
+
+    async function dumpFullLog() {
+      if (dumpInProgressUI) {
+        console.warn("Dump 已在進行中，忽略重複點擊");
+        return;
+      }
+      if (!cmdChar) { alert('Not connected!'); return; }
+      dumpInProgressUI = true;
+      const btn = document.getElementById("dumpBtn");
+      if (btn) btn.disabled = true;
+
+      try {
+        dumpBuffer = [];
+        dumpExpectedSize = 0;
+        dumpReceivedSize = 0;
+        document.getElementById('status').textContent = '⏳ 請求完整記錄...';
+
+        dumpChar.removeEventListener('characteristicvaluechanged', onDumpChunk);
+        dumpChar.addEventListener('characteristicvaluechanged', onDumpChunk);
+        await dumpChar.startNotifications();
+
+        await new Promise(r => setTimeout(r, 300));
+
+        await cmdChar.writeValue(new TextEncoder().encode('DUMP'));
+        console.log("DUMP 指令已送出，等待資料...");
+      } catch (err) {
+        console.error("Dump 發生錯誤：", err);
+        alert("Dump 發生錯誤，請中斷藍牙、重新連線後再試一次：" + err.message);
+      } finally {
+        dumpInProgressUI = false;
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function onDumpChunk(event) {
+      const bytes = new Uint8Array(event.target.value.buffer);
+      const text = new TextDecoder().decode(bytes);
+
+      if (text.startsWith('##START:')) {
+        dumpExpectedSize = parseInt(text.replace('##START:', '').replace('##', ''), 10);
+        dumpBuffer = [];
+        dumpReceivedSize = 0;
+        document.getElementById('status').textContent = `⏳ 下載中... 0 / ${dumpExpectedSize} bytes`;
+        return;
+      }
+      if (text === '##EOF##') {
+        document.getElementById('log').textContent = dumpBuffer.join('');
+        document.getElementById('status').textContent = `✅ 下載完成，共 ${dumpReceivedSize} bytes`;
+        return;
+      }
+      dumpBuffer.push(text);
+      dumpReceivedSize += bytes.length;
+      document.getElementById('status').textContent = `⏳ 下載中... ${dumpReceivedSize} / ${dumpExpectedSize} bytes`;
+    }
+
+    async function copyLog() {
+      try {
+        const text = document.getElementById('log').textContent;
+        await navigator.clipboard.writeText(text);
+        document.getElementById('status').textContent = '✅ 已複製到剪貼簿';
+      } catch (e) {
+        document.getElementById('status').textContent = '❌ 複製失敗: ' + e;
+      }
+    }
+
+    async function clearDeviceLog() {
+      if (!cmdChar) { alert('Not connected!'); return; }
+      const sure = confirm('⚠️ 此動作將清空裝置上的 log.csv，且無法復原，確定要繼續嗎？');
+      if (!sure) return;
+      try {
+        document.getElementById('status').textContent = '⏳ 正在清除裝置記錄...';
+        await cmdChar.writeValue(new TextEncoder().encode('CLEAR'));
+      } catch (e) {
+        document.getElementById('status').textContent = '❌ 清除失敗: ' + e;
+      }
+    }
+
+    function clearLog() {
+      document.getElementById('log').textContent = '';
+    }
+  </script>
+</body>
+</html>
