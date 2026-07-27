@@ -6,8 +6,10 @@
   <style>
     body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #00ff00; }
     button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; }
+    input[type="text"] { padding: 8px; font-size: 16px; font-family: monospace; }
     #log { white-space: pre; background: #000; padding: 10px; margin-top: 20px; min-height: 200px; max-height: 400px; overflow-y: auto; }
     #status { color: #ffff00; margin: 10px 0; }
+    .section { border-top: 1px solid #333; margin-top: 20px; padding-top: 10px; }
   </style>
 </head>
 <body>
@@ -18,6 +20,23 @@
   <button onclick="copyLog()">📋 複製結果</button>
   <button onclick="clearDeviceLog()">🗑 清除裝置記錄</button>
   <button onclick="clearLog()">🧹 Clear Display</button>
+
+  <div class="section">
+    <h3>🪪 白名單管理（新增 / 移除卡片，不需 USB）</h3>
+    <div>
+      卡片 UID：<input type="text" id="uidInput" placeholder="XX:XX:XX:XX">
+      <button onclick="fillLastDeniedUid()">↩️ 帶入最近偵測到的卡片</button>
+    </div>
+    <div>
+      <button onclick="addWhitelist()">➕ 新增白名單</button>
+      <button onclick="removeWhitelist()">➖ 移除白名單</button>
+      <button onclick="listWhitelist()">📋 查詢目前白名單</button>
+    </div>
+    <div style="color:#888; font-size: 13px; margin-top: 5px;">
+      使用方式：先刷一次新卡片（會顯示 DENIED 及 UID），點「帶入最近偵測到的卡片」自動填入，再按「新增白名單」即可，不需要重新燒錄。
+    </div>
+  </div>
+
   <div id="status">Not connected</div>
   <div id="log">Log will appear here...</div>
   <script>
@@ -32,6 +51,7 @@
     let dumpExpectedSize = 0;
     let dumpReceivedSize = 0;
     let dumpInProgressUI = false;
+    let lastDeniedUid = '';
 
     async function connect() {
       try {
@@ -51,8 +71,22 @@
         notifyChar.addEventListener('characteristicvaluechanged', (e) => {
           const msg = new TextDecoder().decode(e.target.value);
           document.getElementById('log').textContent += '\n[EVENT] ' + msg;
+
           if (msg.toUpperCase() === 'LOG_CLEARED' || msg.toLowerCase() === 'cleared') {
             document.getElementById('status').textContent = '✅ 裝置記錄已清除';
+          } else if (msg.startsWith('DENIED:')) {
+            lastDeniedUid = msg.substring('DENIED:'.length).trim();
+          } else if (msg.startsWith('ADD_OK:')) {
+            document.getElementById('status').textContent = '✅ 已新增白名單: ' + msg.substring('ADD_OK:'.length);
+          } else if (msg.startsWith('ADD_FAIL:')) {
+            document.getElementById('status').textContent = '❌ 新增失敗: ' + msg.substring('ADD_FAIL:'.length);
+          } else if (msg.startsWith('REMOVE_OK:')) {
+            document.getElementById('status').textContent = '✅ 已移除白名單: ' + msg.substring('REMOVE_OK:'.length);
+          } else if (msg.startsWith('REMOVE_FAIL:')) {
+            document.getElementById('status').textContent = '❌ 移除失敗: ' + msg.substring('REMOVE_FAIL:'.length);
+          } else if (msg.startsWith('WLLIST:')) {
+            const list = msg.substring('WLLIST:'.length);
+            document.getElementById('status').textContent = '📋 目前動態白名單: ' + (list.length ? list.split('|').join(', ') : '（空）');
           }
         });
 
@@ -153,6 +187,60 @@
 
     function clearLog() {
       document.getElementById('log').textContent = '';
+    }
+
+    function fillLastDeniedUid() {
+      if (!lastDeniedUid) {
+        alert('尚未偵測到任何未授權卡片，請先刷一次新卡片。');
+        return;
+      }
+      document.getElementById('uidInput').value = lastDeniedUid;
+    }
+
+    function normalizeUid(raw) {
+      return raw.trim().toUpperCase();
+    }
+
+    async function addWhitelist() {
+      if (!cmdChar) { alert('Not connected!'); return; }
+      const uid = normalizeUid(document.getElementById('uidInput').value);
+      if (!/^([0-9A-F]{2}:){3}[0-9A-F]{2}$/.test(uid)) {
+        alert('UID 格式錯誤，請輸入類似 21:47:28:07 的格式');
+        return;
+      }
+      try {
+        document.getElementById('status').textContent = '⏳ 正在新增白名單...';
+        await cmdChar.writeValue(new TextEncoder().encode('ADD:' + uid));
+      } catch (e) {
+        document.getElementById('status').textContent = '❌ 新增失敗: ' + e;
+      }
+    }
+
+    async function removeWhitelist() {
+      if (!cmdChar) { alert('Not connected!'); return; }
+      const uid = normalizeUid(document.getElementById('uidInput').value);
+      if (!/^([0-9A-F]{2}:){3}[0-9A-F]{2}$/.test(uid)) {
+        alert('UID 格式錯誤，請輸入類似 21:47:28:07 的格式');
+        return;
+      }
+      const sure = confirm('確定要將 ' + uid + ' 從白名單移除嗎？（出廠內建卡片無法被移除）');
+      if (!sure) return;
+      try {
+        document.getElementById('status').textContent = '⏳ 正在移除白名單...';
+        await cmdChar.writeValue(new TextEncoder().encode('REMOVE:' + uid));
+      } catch (e) {
+        document.getElementById('status').textContent = '❌ 移除失敗: ' + e;
+      }
+    }
+
+    async function listWhitelist() {
+      if (!cmdChar) { alert('Not connected!'); return; }
+      try {
+        document.getElementById('status').textContent = '⏳ 查詢白名單中...';
+        await cmdChar.writeValue(new TextEncoder().encode('LISTWL'));
+      } catch (e) {
+        document.getElementById('status').textContent = '❌ 查詢失敗: ' + e;
+      }
     }
   </script>
 </body>
