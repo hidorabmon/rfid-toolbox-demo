@@ -121,13 +121,11 @@
   <h2 id="pasteTitle">📥 貼上 log.csv 內容</h2>
   <textarea id="logInput"></textarea>
   <div class="row">
-    <button id="pasteBtn" onclick="pasteOnly()"></button>
-    <button id="parseBtn" onclick="renderDashboard()"></button>
+    <button id="pasteParseBtn" onclick="pasteAndParse()"></button>
     <div class="field">
       <label id="syncTimeLabel"></label>
       <input type="datetime-local" id="syncTime">
     </div>
-    <button id="clearInputBtn" onclick="clearLogInput()"></button>
     <span id="parseStatus" style="font-size:12px; color:#888;"></span>
   </div>
 </div>
@@ -180,9 +178,7 @@ const LANGS = {
     subtitle: "貼上手機 BLE 讀取到的 log.csv 內容，按下方按鈕即可更新以下所有區塊。所有運算都在本機瀏覽器完成，不會上傳任何資料。",
     pasteTitle: "📥 貼上 log.csv 內容",
     syncTimeLabel: "目前貼上的真實時間（用於推算時間，可修改）",
-    clearInputBtn: "🗑 清除",
-    pasteBtn: "📋 貼上（從剪貼簿）",
-    parseBtn: "🔍 解析",
+    pasteParseBtn: "📋 貼上並解析（從剪貼簿）",
     notBorrowedHeading: "🟢 尚未借出",
     borrowedHeading: "🔴 已借出",
     borrowedByPrefix: "借走：",
@@ -223,9 +219,7 @@ const LANGS = {
     subtitle: "Paste the log.csv content read from the phone via BLE, then click the button below to refresh everything. All processing happens locally in your browser \u2014 nothing is uploaded.",
     pasteTitle: "📥 Paste log.csv content",
     syncTimeLabel: "Current real time when pasting (used to estimate timestamps, editable)",
-    clearInputBtn: "🗑 Clear",
-    pasteBtn: "📋 Paste (from clipboard)",
-    parseBtn: "🔍 Parse",
+    pasteParseBtn: "📋 Paste & Parse (from clipboard)",
     notBorrowedHeading: "🟢 Not Borrowed",
     borrowedHeading: "🔴 Borrowed",
     borrowedByPrefix: "Borrowed by: ",
@@ -439,12 +433,7 @@ function fmtApproxTime(eventMillis, anchorMillis, syncDate) {
   return approx.toLocaleString(lang === "zh" ? "zh-TW" : "en-US", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
-function clearLogInput() {
-  document.getElementById("logInput").value = "";
-  document.getElementById("parseStatus").textContent = "";
-}
-
-async function pasteOnly() {
+async function pasteAndParse() {
   try {
     const text = await navigator.clipboard.readText();
     if (!text || !text.trim()) {
@@ -452,10 +441,11 @@ async function pasteOnly() {
       return;
     }
     document.getElementById("logInput").value = text;
+    renderDashboard();
   } catch (err) {
     alert(lang === "zh"
-      ? "無法讀取剪貼簿（因為這個看板是內嵌在 Notion 頁面裡的內容，瀏覽器不會開放剪貼簿權限給它，這是瀏覽器安全限制，不是錯誤）。請改用手動貼上：在 Log Reader 頁面按「複製結果」後，直接在下方文字框內點一下、按住貼上，貼上後會自動解析，不需要再按任何按鈕。"
-      : 'Could not read the clipboard (this dashboard is embedded inside a Notion page, and browsers do not grant clipboard permission to embedded content — this is a browser security restriction, not a bug). Please paste manually instead: after clicking "Copy Result" on the Log Reader page, tap into the text box below and paste. It will parse automatically once pasted — no button needed.');
+      ? "無法讀取剪貼簿。請改用手動貼上：在 Log Reader 頁面按「複製結果」後，直接在下方文字框內點一下、按住貼上，貼上後會自動解析，不需要再按任何按鈕。"
+      : 'Could not read the clipboard. Please paste manually instead: after clicking "Copy Result" on the Log Reader page, tap into the text box below and paste. It will parse automatically once pasted — no button needed.');
   }
 }
 
@@ -570,9 +560,7 @@ function updateStaticText() {
   document.getElementById("subtitle").textContent = Lz.subtitle;
   document.getElementById("pasteTitle").textContent = Lz.pasteTitle;
   document.getElementById("syncTimeLabel").textContent = Lz.syncTimeLabel;
-  document.getElementById("clearInputBtn").textContent = Lz.clearInputBtn;
-  document.getElementById("pasteBtn").textContent = Lz.pasteBtn;
-  document.getElementById("parseBtn").textContent = Lz.parseBtn;
+  document.getElementById("pasteParseBtn").textContent = Lz.pasteParseBtn;
   document.getElementById("notBorrowedHeading").textContent = Lz.notBorrowedHeading;
   document.getElementById("borrowedHeading").textContent = Lz.borrowedHeading;
   document.getElementById("summaryTitle").textContent = Lz.summaryTitle;
