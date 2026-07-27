@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title id="pageTitle">工具箱狀態看板（使用者展示版）</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Noto Sans TC", Arial, sans-serif;
+    background: #f4f5f7;
+    margin: 0;
+    padding: 24px;
+    color: #2c2c2c;
+  }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .subtitle { color: #666; margin-bottom: 20px; font-size: 13px; }
+  .lang-toggle { display:flex; justify-content:flex-end; gap:6px; margin-bottom: 14px; }
+  .lang-btn {
+    background:#fff; color:#2383e2; border:1px solid #2383e2;
+    padding:5px 14px; border-radius:6px; font-size:12px; cursor:pointer; height:auto; font-weight:600;
+  }
+  .lang-btn.active { background:#2383e2; color:#fff; }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .card h2 { font-size: 15px; margin: 0 0 12px 0; display:flex; align-items:center; gap:6px;}
+  textarea {
+    width: 100%;
+    height: 90px;
+    font-family: monospace;
+    font-size: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    resize: vertical;
+  }
+  .row { display:flex; gap:14px; align-items:flex-end; flex-wrap: wrap; margin-top: 10px; }
+  .field label { display:block; font-size:11px; color:#888; margin-bottom:4px; }
+  input[type=datetime-local] {
+    border:1px solid #ddd; border-radius:6px; padding:6px 8px; font-size:13px;
+  }
+  button {
+    background: #2383e2;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    height: 34px;
+  }
+  button:hover { background: #1a6fc4; }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+  }
+  .stat-box {
+    background: #f7f8fa;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-box .num { font-size: 26px; font-weight: 700; color: #2383e2; }
+  .stat-box.warn-num .num { color: #c62828; }
+  .stat-box .label { font-size: 12px; color: #666; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee; }
+  th { color: #888; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .ok { background: #dff5e1; color: #1e7d32; }
+  .warn { background: #fdecea; color: #c62828; }
+  .muted { color: #999; }
+  .status-banner {
+    display:flex; align-items:center; gap:10px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .status-banner.ok-bg { background:#e8f8ec; color:#1e7d32; }
+  .status-banner.warn-bg { background:#fdecea; color:#c62828; }
+  .status-banner.info-bg { background:#eef2f7; color:#556; }
+  .empty-note { color: #999; font-size: 13px; padding: 10px 0; }
+  .footer-note { color: #aaa; font-size: 11px; text-align:center; margin-top: 10px; }
+  details summary { cursor:pointer; font-size:13px; color:#555; padding:4px 0; }
+  .adv-section { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #eee; }
+  .status-subheading { font-size: 13px; color: #666; margin: 14px 0 8px 0; font-weight: 600; }
+  .status-block:first-of-type .status-subheading { margin-top: 4px; }
+  .tool-item { background: #f7f8fa; border-radius: 8px; margin-bottom: 8px; padding: 2px 12px; }
+  .tool-item summary { display: flex; align-items: center; gap: 8px; padding: 10px 0; font-size: 13px; list-style: none; }
+  .tool-item summary::-webkit-details-marker { display: none; }
+  .tool-item .tool-name { flex: 1; font-weight: 600; }
+  .tool-item .tool-status { font-size: 12px; color: #666; }
+  .tool-item .tool-history { padding: 4px 0 10px 0; }
+  .tool-item .tool-history table { font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="lang-toggle">
+  <button id="btnZh" onclick="setLang('zh')" class="lang-btn active">中文</button>
+  <button id="btnEn" onclick="setLang('en')" class="lang-btn">EN</button>
+</div>
+
+<h1 id="mainTitle">🧰 工具箱狀態看板（使用者展示版）</h1>
+<div class="subtitle" id="subtitle"></div>
+
+<div class="card">
+  <h2 id="pasteTitle">📥 貼上 log.csv 內容</h2>
+  <textarea id="logInput"></textarea>
+  <div class="row">
+    <button id="pasteBtn" onclick="pasteOnly()"></button>
+    <button id="parseBtn" onclick="renderDashboard()"></button>
+    <div class="field">
+      <label id="syncTimeLabel"></label>
+      <input type="datetime-local" id="syncTime">
+    </div>
+    <button id="clearInputBtn" onclick="clearLogInput()"></button>
+    <span id="parseStatus" style="font-size:12px; color:#888;"></span>
+  </div>
+</div>
+
+<div class="card">
+  <h2 id="summaryTitle"></h2>
+  <div class="summary-grid" id="summaryGrid"></div>
+</div>
+
+<div class="card">
+  <h2 id="statusTitle"></h2>
+  <div id="statusBanner"></div>
+  <div class="status-block">
+    <h3 id="notBorrowedHeading" class="status-subheading"></h3>
+    <div id="notBorrowedSection"></div>
+  </div>
+  <div class="status-block">
+    <h3 id="borrowedHeading" class="status-subheading"></h3>
+    <div id="borrowedSection"></div>
+  </div>
+</div>
+
+<details class="card">
+  <summary id="advancedSummary"></summary>
+  <div class="adv-section">
+    <h2 id="historyTitle"></h2>
+    <div id="historyTable"></div>
+  </div>
+  <div class="adv-section">
+    <h2 id="scanCompareTitle"></h2>
+    <div id="scanCompare"></div>
+  </div>
+  <div class="adv-section">
+    <h2 id="cardLogTitle"></h2>
+    <div id="cardLog"></div>
+  </div>
+  <div class="adv-section">
+    <h2 id="timelineTitle"></h2>
+    <div id="timeline"></div>
+  </div>
+</details>
+
+<div class="footer-note" id="footerNote"></div>
+
+<script>
+const LANGS = {
+  zh: {
+    pageTitle: "工具箱狀態看板（使用者展示版）",
+    mainTitle: "🧰 工具箱狀態看板（使用者展示版）",
+    subtitle: "貼上手機 BLE 讀取到的 log.csv 內容，按下方按鈕即可更新以下所有區塊。所有運算都在本機瀏覽器完成，不會上傳任何資料。",
+    pasteTitle: "📥 貼上 log.csv 內容",
+    syncTimeLabel: "目前貼上的真實時間（用於推算時間，可修改）",
+    clearInputBtn: "🗑 清除",
+    pasteBtn: "📋 貼上（從剪貼簿）",
+    parseBtn: "🔍 解析",
+    notBorrowedHeading: "🟢 尚未借出",
+    borrowedHeading: "🔴 已借出",
+    borrowedByPrefix: "借走：",
+    noToolHistory: "目前沒有這個工具的借還紀錄。",
+    noToolsInSection: "目前沒有工具屬於這個狀態。",
+    summaryTitle: "📊 今日摘要",
+    statAuthorized: "✅ 刷卡成功",
+    statDenied: "⛔ 刷卡被拒",
+    statusTitle: "🧰 工具箱狀態",
+    statusOk: "✅ 目前工具都在",
+    statusUnknown: "ℹ️ 尚無關箱掃描紀錄，無法判斷工具箱狀態",
+    borrowerCol: "借走的人",
+    toolCol: "借走的工具",
+    advancedSummary: "🔧 進階資訊（除錯用，管理者可展開）",
+    historyTitle: "🔁 今日借還歷程",
+    historyEmpty: "目前沒有偵測到任何借出／歸還事件。",
+    colTime: "時間", colTool: "工具", colAction: "動作", colPerson: "人",
+    actionBorrowed: "借���", actionReturned: "歸還",
+    scanCompareTitle: "🔍 最近一次關箱掃描 — 19 顆標籤對照表",
+    colTag: "編號", colToolName: "標籤／工具", colState: "狀態",
+    inBox: "✅ 在箱內", notInBox: "⚠️ 不在箱內",
+    cardLogTitle: "🪪 感應卡刷卡紀錄",
+    colUid: "UID", colHolder: "持卡人／卡片", colResult: "結果",
+    timelineTitle: "🕒 原始事件時間軸",
+    footerNote: "產生於 RFID 智能工具箱專案 · 標籤／感應卡對照表內建於本檔案 · 請在下方 TAG_TABLE / CARD_TABLE 常數裡更新實際工具名稱與持卡人姓名",
+    parseEmpty: "沒有解析到有效事件（請確認格式為 millis,tag,status）",
+    parseOk: (n) => `已解析 ${n} 筆事件`,
+    unknownBorrower: "不明（無法辨識持卡人）",
+    statusWarn: (n) => `⚠️ 目前有 ${n} 項工具外借中`,
+    unknownCard: "未知卡片",
+    noCardLog: "目前的 log 中沒有刷卡紀錄。",
+    noTimeline: "沒有可顯示的事件。",
+    noScan: "目前的 log 中沒有 CLOSE_SCAN 紀錄。"
+  },
+  en: {
+    pageTitle: "Toolbox Status Dashboard (Demo Version)",
+    mainTitle: "🧰 Toolbox Status Dashboard (Demo Version)",
+    subtitle: "Paste the log.csv content read from the phone via BLE, then click the button below to refresh everything. All processing happens locally in your browser \u2014 nothing is uploaded.",
+    pasteTitle: "📥 Paste log.csv content",
+    syncTimeLabel: "Current real time when pasting (used to estimate timestamps, editable)",
+    clearInputBtn: "🗑 Clear",
+    pasteBtn: "📋 Paste (from clipboard)",
+    parseBtn: "🔍 Parse",
+    notBorrowedHeading: "🟢 Not Borrowed",
+    borrowedHeading: "🔴 Borrowed",
+    borrowedByPrefix: "Borrowed by: ",
+    noToolHistory: "No borrow/return history for this tool yet.",
+    noToolsInSection: "No tools currently in this state.",
+    summaryTitle: "📊 Today's Summary",
+    statAuthorized: "✅ Successful scans",
+    statDenied: "⛔ Denied scans",
+    statusTitle: "🧰 Toolbox Status",
+    statusOk: "✅ All tools are in the box",
+    statusUnknown: "ℹ️ No close-scan record yet \u2014 cannot determine toolbox status",
+    borrowerCol: "Borrowed by",
+    toolCol: "Tool borrowed",
+    advancedSummary: "🔧 Advanced info (for debugging, admins can expand)",
+    historyTitle: "🔁 Today's Borrow / Return History",
+    historyEmpty: "No borrow/return events detected yet.",
+    colTime: "Time", colTool: "Tool", colAction: "Action", colPerson: "Person",
+    actionBorrowed: "Borrowed", actionReturned: "Returned",
+    scanCompareTitle: "🔍 Latest close-scan \u2014 Full 19-tag comparison",
+    colTag: "No.", colToolName: "Tag / Tool", colState: "Status",
+    inBox: "✅ In box", notInBox: "⚠️ Not in box",
+    cardLogTitle: "🪪 Card Scan Log",
+    colUid: "UID", colHolder: "Card holder", colResult: "Result",
+    timelineTitle: "🕒 Raw Event Timeline",
+    footerNote: "Generated for the RFID Smart Toolbox project \u00b7 Tag/card lookup tables are embedded in this file \u00b7 Update the TAG_TABLE / CARD_TABLE constants below with real tool names and holder names",
+    parseEmpty: "No valid events parsed (check the format is millis,tag,status)",
+    parseOk: (n) => `Parsed ${n} event(s)`,
+    unknownBorrower: "Unknown (card holder not identified)",
+    statusWarn: (n) => `⚠️ ${n} tool(s) currently borrowed`,
+    unknownCard: "Unknown card",
+    noCardLog: "No card scan events in the current log.",
+    noTimeline: "No events to display.",
+    noScan: "No CLOSE_SCAN record in the current log."
+  }
+};
+let lang = "zh";
+
+// ---- 內建對照表（依 Notion 專案頁「標籤 & 感應卡/扣總清單」，目前尚無實際工具名稱/真實姓名，展示前請更新）----
+const TAG_TABLE = {
+  "01": { zh: "廠商測試卡（參考標籤，非實際工具用）", en: "Vendor test tag (reference only)" },
+  "02": { zh: "美工刀", en: "Utility Knife" },
+  "03": { zh: "標籤 03", en: "Tag 03" },
+  "04": { zh: "梅花扳手 3/8\"", en: "3/8\" Box Wrench" },
+  "05": { zh: "梅花扳手 9/16\"", en: "9/16\" Box Wrench" },
+  "06": { zh: "標籤 06", en: "Tag 06" },
+  "07": { zh: "標籤 07", en: "Tag 07" },
+  "08": { zh: "小六角起子", en: "Small Hex Screwdriver" },
+  "09": { zh: "標籤 09", en: "Tag 09" },
+  "10": { zh: "標籤 10", en: "Tag 10" },
+  "11": { zh: "標籤 11", en: "Tag 11" },
+  "12": { zh: "大十字起子", en: "Large Phillips Screwdriver" },
+  "13": { zh: "標籤 13", en: "Tag 13" },
+  "14": { zh: "標籤 14", en: "Tag 14" },
+  "15": { zh: "標籤 15", en: "Tag 15" },
+  "16": { zh: "標籤 16（最小圓形標籤）", en: "Tag 16 (smallest round tag)" },
+  "17": { zh: "標籤 17（不同批次晶片）", en: "Tag 17 (different chip batch)" },
+  "18": { zh: "標籤 18", en: "Tag 18" },
+  "19": { zh: "標籤 19", en: "Tag 19" }
+};
+
+// 👉 Demo 展示用標籤清單：目前 Demo 只保留這 5 顆標籤（工具），「工具箱狀態」只會顯示這幾顆，
+// 其餘標籤資料仍完整保留在下方「進階資訊」區塊。等正式定案標籤編號對應表後，
+// 請把下面換成實際要展示的 5 個標籤編號（並同步更新上面 TAG_TABLE 的工具名稱）。
+const DEMO_TAG_NUMBERS = ["02", "04", "05", "08", "12"];
+
+const CARD_TABLE = {
+  "21:47:28:07": { zh: "John", en: "John" },
+  "4E:A6:14:07": { zh: "John", en: "John" },
+  "20:B4:11:5C": { zh: "感應卡 03（尚未列入白名單）", en: "Card 03 (not yet whitelisted)" },
+  "F4:34:C8:53": { zh: "Yang", en: "Yang" }
+};
+
+function tagLabel(num) { const t = TAG_TABLE[num]; return t ? t[lang] : num; }
+function cardLabel(uid) { const c = CARD_TABLE[uid]; return c ? c[lang] : LANGS[lang].unknownCard; }
+
+const SAMPLE_LOG = `millis,tag,status\n5180,4E:A6:14:07,AUTHORIZED\n5764,SYSTEM,BOX_OPEN\n10728,SYSTEM,BOX_CLOSED\n21079,CLOSE_SCAN,9 tags: 08|07|17|06|11|12|03|16|13`;
+
+function parseLog(raw) {
+  const text = raw.replace(/<br\s*\/?>/gi, "\n");
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  const events = [];
+  for (const line of lines) {
+    if (line.toLowerCase().startsWith("millis,tag,status")) continue;
+    const idx1 = line.indexOf(",");
+    if (idx1 === -1) continue;
+    const idx2 = line.indexOf(",", idx1 + 1);
+    if (idx2 === -1) continue;
+    const millisStr = line.slice(0, idx1);
+    const tag = line.slice(idx1 + 1, idx2);
+    const status = line.slice(idx2 + 1);
+    if (!/^\d+$/.test(millisStr)) continue;
+    events.push({ millis: parseInt(millisStr, 10), tag, status });
+  }
+  events.sort((a, b) => a.millis - b.millis);
+  return events;
+}
+
+function buildCycles(events) {
+  const cycles = [];
+  let lastAuthorized = null;
+  let pending = null;
+  for (const e of events) {
+    if (e.tag !== "SYSTEM" && e.tag !== "CLOSE_SCAN" && (e.status === "AUTHORIZED" || e.status === "DENIED")) {
+      if (e.status === "AUTHORIZED") lastAuthorized = { uid: e.tag, millis: e.millis };
+    } else if (e.tag === "SYSTEM" && e.status === "BOX_OPEN") {
+      pending = { actorUid: lastAuthorized ? lastAuthorized.uid : null, openMillis: e.millis, closeMillis: null, scanMillis: null, tags: null };
+    } else if (e.tag === "SYSTEM" && e.status === "BOX_CLOSED") {
+      if (pending) pending.closeMillis = e.millis;
+    } else if (e.tag === "CLOSE_SCAN") {
+      const m = e.status.match(/tags:\s*(.*)$/i);
+      const nums = m ? m[1].split("|").map(s => s.trim()).filter(Boolean) : [];
+      if (pending) {
+        pending.scanMillis = e.millis;
+        pending.tags = nums;
+        cycles.push(pending);
+        pending = null;
+      } else {
+        cycles.push({ actorUid: lastAuthorized ? lastAuthorized.uid : null, openMillis: null, closeMillis: null, scanMillis: e.millis, tags: nums });
+      }
+    }
+  }
+  return cycles;
+}
+
+function diffCycles(cycles) {
+  let presentSet = null;
+  const borrowMap = new Map();
+  const history = [];
+  for (const c of cycles) {
+    const curSet = new Set(c.tags || []);
+    if (presentSet === null) {
+      for (const t of Object.keys(TAG_TABLE)) {
+        if (!curSet.has(t)) borrowMap.set(t, { borrowerUid: null, unknown: true });
+      }
+    } else {
+      for (const t of presentSet) {
+        if (!curSet.has(t)) {
+          borrowMap.set(t, { borrowerUid: c.actorUid, unknown: false });
+          history.push({ tag: t, action: "borrowed", actorUid: c.actorUid, atMillis: c.openMillis != null ? c.openMillis : c.scanMillis });
+        }
+      }
+      for (const t of curSet) {
+        if (!presentSet.has(t)) {
+          borrowMap.delete(t);
+          history.push({ tag: t, action: "returned", actorUid: c.actorUid, atMillis: c.closeMillis != null ? c.closeMillis : c.scanMillis });
+        }
+      }
+    }
+    presentSet = curSet;
+  }
+  history.sort((a, b) => (a.atMillis ?? 0) - (b.atMillis ?? 0));
+  return { presentSet, borrowMap, history };
+}
+
+function renderToolItem(tagNum, isBorrowed, borrowerUid, history, anchorMillis, syncDate, Lz) {
+  const tagHistory = history.filter(h => h.tag === tagNum);
+  const icon = isBorrowed ? "🔴" : "🟢";
+  const label = tagLabel(tagNum);
+  const borrowerName = borrowerUid ? cardLabel(borrowerUid) : Lz.unknownBorrower;
+  const statusText = isBorrowed ? `${Lz.borrowedByPrefix}${borrowerName}` : Lz.inBox;
+
+  let historyHtml;
+  if (tagHistory.length === 0) {
+    historyHtml = `<div class="empty-note">${Lz.noToolHistory}</div>`;
+  } else {
+    const rows = tagHistory.map(h => {
+      const approx = fmtApproxTime(h.atMillis, anchorMillis, syncDate);
+      const timeText = approx ? approx : (h.atMillis != null ? `T+${h.atMillis}ms` : "\u2014");
+      const actionText = h.action === "borrowed" ? Lz.actionBorrowed : Lz.actionReturned;
+      const personName = h.actorUid ? cardLabel(h.actorUid) : Lz.unknownBorrower;
+      return `<tr><td>${timeText}</td><td>${actionText}</td><td>${personName}</td></tr>`;
+    }).join("");
+    historyHtml = `<table><thead><tr><th>${Lz.colTime}</th><th>${Lz.colAction}</th><th>${Lz.colPerson}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  return `<details class="tool-item">
+    <summary><span>${icon}</span><span class="tool-name">${label}（${tagNum}）</span><span class="tool-status">${statusText}</span></summary>
+    <div class="tool-history">${historyHtml}</div>
+  </details>`;
+}
+
+function renderToolStatusSections(presentSet, borrowMap, history, anchorMillis, syncDate, Lz) {
+  const notBorrowedEl = document.getElementById("notBorrowedSection");
+  const borrowedEl = document.getElementById("borrowedSection");
+
+  const notBorrowed = [];
+  const borrowed = [];
+  const sortedDemoTags = [...DEMO_TAG_NUMBERS].sort((a, b) => Number(a) - Number(b));
+
+  for (const t of sortedDemoTags) {
+    const isBorrowed = presentSet ? !presentSet.has(t) : false;
+    if (isBorrowed) borrowed.push(t); else notBorrowed.push(t);
+  }
+
+  notBorrowedEl.innerHTML = notBorrowed.length
+    ? notBorrowed.map(t => renderToolItem(t, false, null, history, anchorMillis, syncDate, Lz)).join("")
+    : `<div class="empty-note">${Lz.noToolsInSection}</div>`;
+
+  borrowedEl.innerHTML = borrowed.length
+    ? borrowed.map(t => {
+        const info = borrowMap.get(t);
+        const borrowerUid = info && info.borrowerUid ? info.borrowerUid : null;
+        return renderToolItem(t, true, borrowerUid, history, anchorMillis, syncDate, Lz);
+      }).join("")
+    : `<div class="empty-note">${Lz.noToolsInSection}</div>`;
+}
+
+function fmtApproxTime(eventMillis, anchorMillis, syncDate) {
+  if (eventMillis == null || anchorMillis == null || !syncDate || isNaN(syncDate.getTime())) return null;
+  const approx = new Date(syncDate.getTime() - (anchorMillis - eventMillis));
+  return approx.toLocaleString(lang === "zh" ? "zh-TW" : "en-US", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
+function clearLogInput() {
+  document.getElementById("logInput").value = "";
+  document.getElementById("parseStatus").textContent = "";
+}
+
+async function pasteOnly() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (!text || !text.trim()) {
+      alert(lang === "zh" ? "剪貼簿目前是空的，請先在 Log Reader 頁面按下「📋 複製結果」再回來按這個按鈕。" : 'Clipboard is empty. Please click "Copy Result" on the Log Reader page first, then come back and click this button.');
+      return;
+    }
+    document.getElementById("logInput").value = text;
+  } catch (err) {
+    alert(lang === "zh"
+      ? "無法讀取剪貼簿（因為這個看板是內嵌在 Notion 頁面裡的內容，瀏覽器不會開放剪貼簿權限給它，這是瀏覽器安全限制，不是錯誤）。請改用手動貼上：在 Log Reader 頁面按「複製結果」後，直接在下方文字框內點一下、按住貼上，貼上後會自動解析，不需要再按任何按鈕。"
+      : 'Could not read the clipboard (this dashboard is embedded inside a Notion page, and browsers do not grant clipboard permission to embedded content — this is a browser security restriction, not a bug). Please paste manually instead: after clicking "Copy Result" on the Log Reader page, tap into the text box below and paste. It will parse automatically once pasted — no button needed.');
+  }
+}
+
+function renderDashboard() {
+  const Lz = LANGS[lang];
+  const raw = document.getElementById("logInput").value;
+  const events = parseLog(raw);
+  document.getElementById("parseStatus").textContent = events.length ? Lz.parseOk(events.length) : Lz.parseEmpty;
+
+  const syncInput = document.getElementById("syncTime").value;
+  const syncDate = syncInput ? new Date(syncInput) : null;
+  const anchorMillis = events.length ? Math.max(...events.map(e => e.millis)) : null;
+
+  let authorized = 0, denied = 0;
+  const cardEvents = [];
+  const timeline = [];
+
+  for (const e of events) {
+    if (e.tag === "SYSTEM" && e.status === "BOX_OPEN") { timeline.push({ ...e, icon: "📂", label: lang === "zh" ? "開箱" : "Box opened" }); }
+    else if (e.tag === "SYSTEM" && e.status === "BOX_CLOSED") { timeline.push({ ...e, icon: "📁", label: lang === "zh" ? "關箱" : "Box closed" }); }
+    else if (e.tag === "CLOSE_SCAN") {
+      const m = e.status.match(/tags:\s*(.*)$/i);
+      const nums = m ? m[1].split("|").map(s => s.trim()).filter(Boolean) : [];
+      const label = lang === "zh" ? `UHF 掃描：${nums.length} 顆標籤 (${nums.join(", ")})` : `UHF scan: ${nums.length} tag(s) (${nums.join(", ")})`;
+      timeline.push({ ...e, icon: "📡", label });
+    } else if (e.status === "AUTHORIZED" || e.status === "DENIED") {
+      if (e.status === "AUTHORIZED") authorized++; else denied++;
+      cardEvents.push(e);
+      const label = lang === "zh" ? `刷卡 ${e.tag} → ${e.status}` : `Scan ${e.tag} \u2192 ${e.status}`;
+      timeline.push({ ...e, icon: e.status === "AUTHORIZED" ? "✅" : "⛔", label });
+    }
+  }
+
+  document.getElementById("summaryGrid").innerHTML = `
+    <div class="stat-box"><div class="num">${authorized}</div><div class="label">${Lz.statAuthorized}</div></div>
+    <div class="stat-box warn-num"><div class="num">${denied}</div><div class="label">${Lz.statDenied}</div></div>
+  `;
+
+  const cycles = buildCycles(events);
+  const { presentSet, borrowMap, history } = diffCycles(cycles);
+  const statusBannerEl = document.getElementById("statusBanner");
+
+  if (cycles.length === 0 || presentSet === null) {
+    statusBannerEl.innerHTML = `<div class="status-banner info-bg">${Lz.statusUnknown}</div>`;
+  } else {
+    const demoMissing = DEMO_TAG_NUMBERS.filter(t => !presentSet.has(t));
+    statusBannerEl.innerHTML = demoMissing.length === 0
+      ? `<div class="status-banner ok-bg">${Lz.statusOk}</div>`
+      : `<div class="status-banner warn-bg">${Lz.statusWarn(demoMissing.length)}</div>`;
+  }
+
+  renderToolStatusSections(presentSet, borrowMap, history, anchorMillis, syncDate, Lz);
+
+  const historyEl = document.getElementById("historyTable");
+  if (history.length === 0) {
+    historyEl.innerHTML = `<div class="empty-note">${Lz.historyEmpty}</div>`;
+  } else {
+    const rows = history.map(h => {
+      const approx = fmtApproxTime(h.atMillis, anchorMillis, syncDate);
+      const timeText = approx ? `~${approx}` : (h.atMillis != null ? `T+${h.atMillis}ms` : "—");
+      const actionText = h.action === "borrowed" ? Lz.actionBorrowed : Lz.actionReturned;
+      const personName = h.actorUid ? cardLabel(h.actorUid) : Lz.unknownBorrower;
+      return `<tr><td>${timeText}</td><td>${h.tag} \u2014 ${tagLabel(h.tag)}</td><td>${actionText}</td><td>${personName}</td></tr>`;
+    }).join("");
+    historyEl.innerHTML = `<table><thead><tr><th>${Lz.colTime}</th><th>${Lz.colTool}</th><th>${Lz.colAction}</th><th>${Lz.colPerson}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  const scanCompareEl = document.getElementById("scanCompare");
+  const lastCycle = cycles[cycles.length - 1];
+  if (!lastCycle) {
+    scanCompareEl.innerHTML = `<div class="empty-note">${Lz.noScan}</div>`;
+  } else {
+    const detected = new Set(lastCycle.tags || []);
+    let rows = "";
+    for (const num of Object.keys(TAG_TABLE).sort()) {
+      const isIn = detected.has(num);
+      rows += `<tr><td>${num}</td><td>${tagLabel(num)}</td><td>${isIn ? `<span class="badge ok">${Lz.inBox}</span>` : `<span class="badge warn">${Lz.notInBox}</span>`}</td></tr>`;
+    }
+    scanCompareEl.innerHTML = `<table><thead><tr><th>${Lz.colTag}</th><th>${Lz.colToolName}</th><th>${Lz.colState}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  const cardLogEl = document.getElementById("cardLog");
+  if (cardEvents.length === 0) {
+    cardLogEl.innerHTML = `<div class="empty-note">${Lz.noCardLog}</div>`;
+  } else {
+    let rows = "";
+    for (const e of cardEvents) {
+      const who = cardLabel(e.tag);
+      const badge = e.status === "AUTHORIZED" ? `<span class="badge ok">AUTHORIZED</span>` : `<span class="badge warn">DENIED</span>`;
+      rows += `<tr><td>T+${e.millis}ms</td><td>${e.tag}</td><td>${who}</td><td>${badge}</td></tr>`;
+    }
+    cardLogEl.innerHTML = `<table><thead><tr><th>${Lz.colTime}</th><th>${Lz.colUid}</th><th>${Lz.colHolder}</th><th>${Lz.colResult}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  const timelineEl = document.getElementById("timeline");
+  if (timeline.length === 0) {
+    timelineEl.innerHTML = `<div class="empty-note">${Lz.noTimeline}</div>`;
+  } else {
+    timeline.sort((a, b) => a.millis - b.millis);
+    let rows = "";
+    for (const t of timeline) {
+      rows += `<tr><td class="muted">T+${t.millis}ms</td><td>${t.icon}</td><td>${t.label}</td></tr>`;
+    }
+    timelineEl.innerHTML = `<table><tbody>${rows}</tbody></table>`;
+  }
+}
+
+function updateStaticText() {
+  const Lz = LANGS[lang];
+  document.getElementById("pageTitle").textContent = Lz.pageTitle;
+  document.getElementById("mainTitle").textContent = Lz.mainTitle;
+  document.getElementById("subtitle").textContent = Lz.subtitle;
+  document.getElementById("pasteTitle").textContent = Lz.pasteTitle;
+  document.getElementById("syncTimeLabel").textContent = Lz.syncTimeLabel;
+  document.getElementById("clearInputBtn").textContent = Lz.clearInputBtn;
+  document.getElementById("pasteBtn").textContent = Lz.pasteBtn;
+  document.getElementById("parseBtn").textContent = Lz.parseBtn;
+  document.getElementById("notBorrowedHeading").textContent = Lz.notBorrowedHeading;
+  document.getElementById("borrowedHeading").textContent = Lz.borrowedHeading;
+  document.getElementById("summaryTitle").textContent = Lz.summaryTitle;
+  document.getElementById("statusTitle").textContent = Lz.statusTitle;
+  document.getElementById("advancedSummary").textContent = Lz.advancedSummary;
+  document.getElementById("historyTitle").textContent = Lz.historyTitle;
+  document.getElementById("scanCompareTitle").textContent = Lz.scanCompareTitle;
+  document.getElementById("cardLogTitle").textContent = Lz.cardLogTitle;
+  document.getElementById("timelineTitle").textContent = Lz.timelineTitle;
+  document.getElementById("footerNote").textContent = Lz.footerNote;
+  document.getElementById("btnZh").classList.toggle("active", lang === "zh");
+  document.getElementById("btnEn").classList.toggle("active", lang === "en");
+}
+
+function setLang(newLang) {
+  lang = newLang;
+  updateStaticText();
+  renderDashboard();
+}
+
+document.getElementById("logInput").value = SAMPLE_LOG;
+(function () {
+  let autoParseTimer = null;
+  const logInputEl = document.getElementById("logInput");
+  const triggerAutoParse = () => {
+    clearTimeout(autoParseTimer);
+    autoParseTimer = setTimeout(renderDashboard, 150);
+  };
+  // Native paste/typing into the textarea always works, even inside the Notion
+  // embed iframe where navigator.clipboard.readText() is blocked by the browser.
+  // Auto-parse on paste/input so the user never needs to click a separate button.
+  logInputEl.addEventListener("paste", triggerAutoParse);
+  logInputEl.addEventListener("input", triggerAutoParse);
+})();
+(function () {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  const pad = n => String(n).padStart(2, "0");
+  document.getElementById("syncTime").value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+})();
+updateStaticText();
+renderDashboard();
+</script>
+</body>
+</html>
