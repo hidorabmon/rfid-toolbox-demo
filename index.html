@@ -51,7 +51,7 @@
         notifyChar.addEventListener('characteristicvaluechanged', (e) => {
           const msg = new TextDecoder().decode(e.target.value);
           document.getElementById('log').textContent += '\n[EVENT] ' + msg;
-          if (msg === 'LOG_CLEARED') {
+          if (msg.toUpperCase() === 'LOG_CLEARED' || msg.toLowerCase() === 'cleared') {
             document.getElementById('status').textContent = '✅ 裝置記錄已清除';
           }
         });
