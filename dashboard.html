@@ -124,8 +124,61 @@
     .lang-toggle { justify-content: center; }
   }
 </style>
+
+<style id="unifiedStyles">
+  .unified-shell{max-width:900px;margin:0 auto}#pasteInputCard{display:none}.dashboard-sync{display:flex;align-items:center;gap:10px;padding:13px 14px;margin-bottom:16px;border:1px solid #dbe8f5;border-radius:10px;background:#eef6fd;color:#245a86}.dashboard-sync .sync-icon{font-size:20px}.dashboard-sync b{display:block;font-size:14px}.dashboard-sync span:last-child{display:block;margin-top:2px;font-size:12px;color:#5e7182}.unified-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}.unified-brand{font-weight:750;font-size:18px}.unified-brand small{display:block;font-weight:400;font-size:12px;color:#777;margin-top:2px}.ble-chip{font-size:13px;background:#eef2f7;border-radius:999px;padding:7px 10px;color:#556;white-space:nowrap}.ble-chip.connected{background:#e8f8ec;color:#1e7d32}.view-tabs{display:flex;gap:7px;margin:0 0 14px;background:#e9eef2;padding:5px;border-radius:9px}.view-tab{flex:1;background:transparent;color:#556;border:0;border-radius:6px;font-weight:650;font-size:14px;padding:9px 10px;height:42px}.view-tab.active{background:#fff;color:#2383e2;box-shadow:0 1px 2px rgba(0,0,0,.08)}.app-panel{display:none}.app-panel.active{display:block}.controller-card .controller-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.controller-card .controller-actions button{width:auto}.controller-status{padding:11px 12px;border-radius:8px;background:#eef2f7;color:#556;font-size:14px;margin:10px 0}.controller-status.ok{background:#e8f8ec;color:#1e7d32}.controller-log{white-space:pre-wrap;margin:10px 0 0;background:#1f2930;color:#dff5e1;border-radius:8px;padding:12px;min-height:260px;max-height:430px;overflow:auto;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}.controller-note{font-size:13px;color:#777;margin:8px 0 0}.dashboard-panel .lang-toggle{margin-top:0}.controller-management{margin-top:16px;border-top:1px dashed #ddd;padding-top:10px}.controller-management summary{cursor:pointer;font-size:15px;font-weight:650;color:#555;padding:8px 0}.uid-row{display:flex;gap:8px;margin:10px 0}.uid-row input{flex:1;min-width:0;border:1px solid #ddd;border-radius:6px;padding:10px;font:14px ui-monospace,SFMono-Regular,monospace}.controller-management .management-actions{display:flex;gap:8px;flex-wrap:wrap}.controller-management .management-actions button{width:auto}.clear-zone{border-top:1px dashed #ead1cf;margin-top:14px;padding-top:14px}.clear-zone p{font-size:13px;color:#9b4b45;margin:0 0 9px}@media(max-width:480px){.uid-row{flex-wrap:wrap}.uid-row button{width:100%}.controller-management .management-actions{display:grid;grid-template-columns:1fr 1fr}.controller-management .management-actions button{width:100%;padding:10px 8px;font-size:14px}}@media(max-width:480px){.unified-header{align-items:flex-start}.unified-brand{font-size:17px}.view-tab{font-size:13px}.controller-card .controller-actions{display:grid;grid-template-columns:1fr 1fr}.controller-card .controller-actions button{width:100%;padding:10px 8px;font-size:14px}.controller-card .controller-actions button:first-child{grid-column:1/-1}}
+.scan-setting-current{display:inline-block;margin:4px 0 10px;padding:5px 9px;border-radius:999px;background:#eef6fd;color:#245a86;font-size:13px;font-weight:650}.scan-setting-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.scan-setting-actions button{width:100%;padding:10px 7px;height:auto;min-height:44px}.scan-setting-actions button.active{background:#d9ecff;color:#175c9c;box-shadow:inset 0 0 0 1px #2383e2}@media(max-width:480px){.scan-setting-actions{grid-template-columns:repeat(2,1fr)}}
+</style>
 </head>
 <body>
+
+<div class="unified-shell">
+  <header class="unified-header">
+    <div class="unified-brand">🧰 RFID Smart Toolbox<small>BLE 連線與工具狀態整合版</small></div>
+    <div class="ble-chip" id="bleChip">● 尚未連線</div>
+  </header>
+  <nav class="view-tabs" aria-label="工具箱功能">
+    <button class="view-tab active" id="controlTab" type="button">📡 藍牙控制台</button>
+    <button class="view-tab" id="dashboardTab" type="button">📊 工具狀態看板</button>
+  </nav>
+  <section class="app-panel active" id="controlPanel">
+    <div class="card controller-card">
+      <h2>📡 RFID-Toolbox BLE Log Reader</h2>
+      <div class="controller-actions">
+        <button id="bleConnectBtn" type="button">🔗 連線至 RFID-Toolbox</button>
+        <button id="bleReadBtn" type="button" disabled>📥 讀取最新紀錄</button>
+        <button id="bleDumpBtn" type="button" disabled>📦 匯出完整紀錄</button>
+        <button id="demoDataBtn" type="button">✨ 載入示範資料</button>
+      </div>
+      <div class="controller-status" id="bleStatus">請先連線到工具箱。成功讀取後，資料會自動帶入工具狀態看板。</div>
+      <pre class="controller-log" id="bleLog">尚未接收裝置紀錄。</pre>
+      <details class="controller-management">
+        <summary>🪪 感應卡白名單管理</summary>
+        <p class="controller-note">新增或移除 ESP32 的動態白名單；內建固定卡片不會受到移除操作影響。</p>
+        <div class="uid-row"><input id="uidInput" inputmode="text" autocomplete="off" placeholder="UID，例如 F4:34:C8:53" aria-label="感應卡 UID"><button id="fillDeniedBtn" type="button">↩️ 帶入最近拒絕卡</button></div>
+        <div class="uid-row"><input id="cardNameInput" autocomplete="name" maxlength="40" placeholder="持卡人姓名，例如 Linda" aria-label="持卡人姓名"><button id="saveCardNameBtn" type="button">💾 儲存名稱</button></div>
+        <p class="controller-note">姓名只儲存在目前瀏覽器的 localStorage，不會傳送到 ESP32，也不會顯示在其他手機或電腦。</p>
+        <div class="management-actions"><button id="addWhitelistBtn" type="button">➕ 新增白名單</button><button id="removeWhitelistBtn" type="button">➖ 移除白名單</button><button id="listWhitelistBtn" type="button">📋 查詢目前白名單</button></div>
+      </details>
+      <details class="controller-management">
+        <summary>⏱️ 關箱掃描時間設定</summary>
+        <p class="controller-note">掃描時間會儲存在 ESP32；關箱掃描期間刷卡會被鎖定，直到掃描完成才可再次開箱。</p>
+        <div class="scan-setting-current" id="scanSettingCurrent">目前設定：10 秒</div>
+        <div class="scan-setting-actions" role="group" aria-label="關箱掃描時間">
+          <button class="scan-setting-btn" data-scan-ms="2000" type="button">2 秒</button>
+          <button class="scan-setting-btn" data-scan-ms="5000" type="button">5 秒</button>
+          <button class="scan-setting-btn" data-scan-ms="8000" type="button">8 秒</button>
+          <button class="scan-setting-btn active" data-scan-ms="10000" type="button">10 秒</button>
+        </div>
+      </details>
+      <div class="clear-zone">
+        <p>⚠️ 正式上線前可清除 ESP32 裝置內的測試 log。此動作無法復原，白名單不會被刪除。</p>
+        <button id="clearDeviceLogBtn" type="button">🗑 清除 ESP32 裝置紀錄</button>
+      </div>
+      <p class="controller-note">切換到工具狀態看板不會重新載入網頁；BLE 連線和已接收的 log 會保留。</p>
+    </div>
+  </section>
+  <section class="app-panel dashboard-panel" id="dashboardPanel">
 
 <div class="lang-toggle">
   <button id="btnZh" onclick="setLang('zh')" class="lang-btn active">中文</button>
@@ -134,8 +187,9 @@
 
 <h1 id="mainTitle">🧰 工具箱狀態看板（使用者展示版）</h1>
 <div class="subtitle" id="subtitle"></div>
+<div class="dashboard-sync" role="status"><span class="sync-icon">🔄</span><div><b>資料自動同步</b><span id="dashboardSyncText">尚未從藍牙控制台讀取資料</span></div></div>
 
-<div class="card">
+<div class="card" id="pasteInputCard" aria-hidden="true">
   <h2 id="pasteTitle">📥 貼上 log.csv 內容</h2>
   <textarea id="logInput"></textarea>
   <div class="row">
@@ -187,6 +241,8 @@
 </details>
 
 <div class="footer-note" id="footerNote"></div>
+</section>
+</div>
 
 <script>
 const LANGS = {
@@ -310,8 +366,25 @@ const CARD_TABLE = {
   "F4:34:C8:53": { zh: "Yang", en: "Yang" }
 };
 
+const LOCAL_CARD_NAMES_KEY = "rfidToolboxCardNamesV1";
+function getLocalCardNames() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOCAL_CARD_NAMES_KEY) || "{}");
+    return saved && typeof saved === "object" ? saved : {};
+  } catch (_) { return {}; }
+}
+function saveLocalCardName(uid, name) {
+  const names = getLocalCardNames();
+  names[uid] = name;
+  localStorage.setItem(LOCAL_CARD_NAMES_KEY, JSON.stringify(names));
+}
 function tagLabel(num) { const t = TAG_TABLE[num]; return t ? t[lang] : num; }
-function cardLabel(uid) { const c = CARD_TABLE[uid]; return c ? c[lang] : LANGS[lang].unknownCard; }
+function cardLabel(uid) {
+  const localName = getLocalCardNames()[uid];
+  if (localName) return localName;
+  const c = CARD_TABLE[uid];
+  return c ? c[lang] : LANGS[lang].unknownCard;
+}
 
 const SAMPLE_LOG = `millis,tag,status\n5180,4E:A6:14:07,AUTHORIZED\n5764,SYSTEM,BOX_OPEN\n10728,SYSTEM,BOX_CLOSED\n21079,CLOSE_SCAN,9 tags: 08|07|17|06|11|12|03|16|13`;
 
@@ -340,8 +413,8 @@ function buildCycles(events) {
   let lastAuthorized = null;
   let pending = null;
   for (const e of events) {
-    if (e.tag !== "SYSTEM" && e.tag !== "CLOSE_SCAN" && (e.status === "AUTHORIZED" || e.status === "DENIED")) {
-      if (e.status === "AUTHORIZED") lastAuthorized = { uid: e.tag, millis: e.millis };
+    if (e.tag !== "SYSTEM" && e.tag !== "CLOSE_SCAN" && (e.status === "AUTHORIZED" || e.status === "AUTHORIZED_SESSION_STARTED" || e.status === "DENIED")) {
+      if (e.status === "AUTHORIZED" || e.status === "AUTHORIZED_SESSION_STARTED") lastAuthorized = { uid: e.tag, millis: e.millis };
     } else if (e.tag === "SYSTEM" && e.status === "BOX_OPEN") {
       pending = { actorUid: lastAuthorized ? lastAuthorized.uid : null, openMillis: e.millis, closeMillis: null, scanMillis: null, tags: null };
     } else if (e.tag === "SYSTEM" && e.status === "BOX_CLOSED") {
@@ -489,8 +562,8 @@ function renderDashboard() {
       const nums = m ? m[1].split("|").map(s => s.trim()).filter(Boolean) : [];
       const label = lang === "zh" ? `UHF 掃描：${nums.length} 顆標籤 (${nums.join(", ")})` : `UHF scan: ${nums.length} tag(s) (${nums.join(", ")})`;
       timeline.push({ ...e, icon: "📡", label });
-    } else if (e.status === "AUTHORIZED" || e.status === "DENIED") {
-      if (e.status === "AUTHORIZED") authorized++; else denied++;
+    } else if (e.status === "AUTHORIZED" || e.status === "AUTHORIZED_SESSION_STARTED" || e.status === "DENIED") {
+      if (e.status === "AUTHORIZED" || e.status === "AUTHORIZED_SESSION_STARTED") authorized++; else denied++;
       cardEvents.push(e);
       const label = lang === "zh" ? `刷卡 ${e.tag} → ${e.status}` : `Scan ${e.tag} \u2192 ${e.status}`;
       timeline.push({ ...e, icon: e.status === "AUTHORIZED" ? "✅" : "⛔", label });
@@ -552,7 +625,7 @@ function renderDashboard() {
     let rows = "";
     for (const e of cardEvents) {
       const who = cardLabel(e.tag);
-      const badge = e.status === "AUTHORIZED" ? `<span class="badge ok">AUTHORIZED</span>` : `<span class="badge warn">DENIED</span>`;
+      const badge = (e.status === "AUTHORIZED" || e.status === "AUTHORIZED_SESSION_STARTED") ? `<span class="badge ok">AUTHORIZED</span>` : `<span class="badge warn">DENIED</span>`;
       rows += `<tr><td>T+${e.millis}ms</td><td>${e.tag}</td><td>${who}</td><td>${badge}</td></tr>`;
     }
     cardLogEl.innerHTML = `<table><thead><tr><th>${Lz.colTime}</th><th>${Lz.colUid}</th><th>${Lz.colHolder}</th><th>${Lz.colResult}</th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -599,7 +672,7 @@ function setLang(newLang) {
   renderDashboard();
 }
 
-document.getElementById("logInput").value = SAMPLE_LOG;
+document.getElementById("logInput").value = "";
 (function () {
   let autoParseTimer = null;
   const logInputEl = document.getElementById("logInput");
@@ -621,6 +694,42 @@ document.getElementById("logInput").value = SAMPLE_LOG;
 })();
 updateStaticText();
 renderDashboard();
+</script>
+
+<script>
+(() => {
+  const SERVICE_UUID='12345678-1234-1234-1234-123456789abc';
+  const CHAR_READ_UUID='12345678-1234-1234-1234-123456789ab1';
+  const CHAR_NOTIFY_UUID='12345678-1234-1234-1234-123456789ab2';
+  const CHAR_DUMP_UUID='12345678-1234-1234-1234-123456789ab3';
+  const CHAR_CMD_UUID='12345678-1234-1234-1234-123456789ab4';
+  let device, readChar, notifyChar, dumpChar, cmdChar, dumpParts=[], lastDeniedUid='';
+  const $=id=>document.getElementById(id);
+  function status(text, ok=false){$('bleStatus').textContent=text;$('bleStatus').classList.toggle('ok',ok)}
+  function showTab(which){const control=which==='control';$('controlPanel').classList.toggle('active',control);$('dashboardPanel').classList.toggle('active',!control);$('controlTab').classList.toggle('active',control);$('dashboardTab').classList.toggle('active',!control);if(!control) renderDashboard()}
+  $('controlTab').onclick=()=>showTab('control'); $('dashboardTab').onclick=()=>showTab('dashboard');
+  function setSyncNow(){const now=new Date(),pad=n=>String(n).padStart(2,'0');$('syncTime').value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;return now}
+  function findLatestDenied(text){const matches=[...text.matchAll(/DENIED[: ,]+([0-9A-F]{2}(?::[0-9A-F]{2}){3})/gi)];if(matches.length)lastDeniedUid=matches.at(-1)[1].toUpperCase()}
+  function setLog(text, message){const now=setSyncNow();$('bleLog').textContent=text||'尚未接收裝置紀錄。';$('logInput').value=text||'';findLatestDenied(text||'');$('dashboardSyncText').textContent=text?`已從 RFID-Toolbox 讀取 · ${now.toLocaleString('zh-TW')}`:'尚未從藍牙控制台讀取資料';renderDashboard();if(message)status(message,true)}
+  function updateScanSetting(ms){const n=Number(ms);if(![2000,5000,8000,10000].includes(n))return;$('scanSettingCurrent').textContent='目前設定：'+(n/1000)+' 秒';document.querySelectorAll('.scan-setting-btn').forEach(btn=>btn.classList.toggle('active',Number(btn.dataset.scanMs)===n))}
+  function appendEvent(message){const event=message.trim();if(event.startsWith('SCAN_SETTING:'))updateScanSetting(event.split(':')[1]);if(event.startsWith('SCAN_SETTING_SAVED:')){updateScanSetting(event.split(':')[1]);status('✅ 關箱掃描時間已儲存至 ESP32。',true)}if(event.startsWith('SCAN_SETTING_REJECTED:'))status('❌ 不支援的掃描時間設定。');if(event.toUpperCase()==='CLEARED'){setLog('millis,tag,status','✅ ESP32 測試紀錄已清除；Dashboard 已重設。');return}const old=$('bleLog').textContent==='尚未接收裝置紀錄。'?'':$('bleLog').textContent;setLog((old?old+'\n':'')+'[EVENT] '+event,'✅ 收到裝置即時事件；工具看板已同步。')}
+  function onDumpChunk(event){const bytes=new Uint8Array(event.target.value.buffer);const text=new TextDecoder().decode(bytes);if(text.startsWith('##START:')){dumpParts=[];status('⏳ 正在下載完整紀錄…',true);return}if(text==='##EOF##'){setLog(dumpParts.join(''),'✅ 已匯入完整裝置紀錄；請切換到工具狀態看板。');return}dumpParts.push(text)}
+  async function sendCommand(command, successText){if(!cmdChar){status('請先連線至 RFID-Toolbox。');return false}try{await cmdChar.writeValue(new TextEncoder().encode(command));status(successText,true);return true}catch(e){status('❌ 指令送出失敗：'+e.message);return false}}
+  $('bleConnectBtn').onclick=async()=>{if(!navigator.bluetooth){status('❌ 此瀏覽器不支援 Web Bluetooth，請用 Chrome 開啟。');return}try{device=await navigator.bluetooth.requestDevice({filters:[{name:'RFID-Toolbox'}],optionalServices:[SERVICE_UUID]});const server=await device.gatt.connect();const service=await server.getPrimaryService(SERVICE_UUID);[readChar,notifyChar,dumpChar,cmdChar]=await Promise.all([service.getCharacteristic(CHAR_READ_UUID),service.getCharacteristic(CHAR_NOTIFY_UUID),service.getCharacteristic(CHAR_DUMP_UUID),service.getCharacteristic(CHAR_CMD_UUID)]);await notifyChar.startNotifications();notifyChar.addEventListener('characteristicvaluechanged',e=>appendEvent(new TextDecoder().decode(e.target.value)));await dumpChar.startNotifications();dumpChar.addEventListener('characteristicvaluechanged',onDumpChunk);$('bleReadBtn').disabled=$('bleDumpBtn').disabled=false;$('bleChip').textContent='● 已連線：'+device.name;$('bleChip').classList.add('connected');status('✅ 已連線，可讀取裝置紀錄或管理白名單。',true);sendCommand('GETSCAN','⏳ 正在讀取目前關箱掃描時間…');device.addEventListener('gattserverdisconnected',()=>{status('連線已中斷。');$('bleChip').textContent='● 尚未連線';$('bleChip').classList.remove('connected');$('bleReadBtn').disabled=$('bleDumpBtn').disabled=true})}catch(e){status('❌ 連線失敗：'+e.message)}};
+  $('bleReadBtn').onclick=async()=>{try{const value=await readChar.readValue();setLog(new TextDecoder().decode(value),'✅ 已讀取最新紀錄；工具看板已同步。')}catch(e){status('❌ 讀取失敗：'+e.message)}};
+  $('bleDumpBtn').onclick=async()=>{dumpParts=[];await sendCommand('DUMP','⏳ 正在請求完整紀錄…')};
+  $('demoDataBtn').onclick=()=>setLog('millis,tag,status\n5180,4E:A6:14:07,AUTHORIZED\n5764,SYSTEM,BOX_OPEN\n10728,SYSTEM,BOX_CLOSED\n21079,CLOSE_SCAN,5 tags: 02|04|05|08|12\n30000,F4:34:C8:53,AUTHORIZED\n30600,SYSTEM,BOX_OPEN\n35000,SYSTEM,BOX_CLOSED\n44000,CLOSE_SCAN,4 tags: 02|04|08|12\n45000,20:B4:11:5C,DENIED','✅ 已載入示範資料；請切換到工具狀態看板。');
+  $('fillDeniedBtn').onclick=()=>{findLatestDenied($('bleLog').textContent);if(!lastDeniedUid){status('尚未找到 DENIED 卡片 UID。');return}$('uidInput').value=lastDeniedUid;status('✅ 已帶入最近被拒絕的卡片：'+lastDeniedUid,true)};
+  function getUid(){const uid=$('uidInput').value.trim().toUpperCase();if(!/^[0-9A-F]{2}(?::[0-9A-F]{2}){3}$/.test(uid)){status('請輸入正確 UID，例如 F4:34:C8:53。');return null}return uid}
+  function getCardName(){return $('cardNameInput').value.trim()}
+  function saveNameForUid(uid){const name=getCardName();if(!name){status('請先輸入持卡人姓名。');return false}saveLocalCardName(uid,name);renderDashboard();status('✅ 已在本機瀏覽器儲存「'+uid+' → '+name+'」。',true);return true}
+  $('saveCardNameBtn').onclick=()=>{const uid=getUid();if(uid)saveNameForUid(uid)};
+  $('addWhitelistBtn').onclick=async()=>{const uid=getUid();if(!uid)return;const name=getCardName();if(name)saveLocalCardName(uid,name);const sent=await sendCommand('ADD:'+uid, name?'⏳ 已送出新增白名單指令；名稱已只儲存在本機瀏覽器。':'⏳ 已送出新增白名單指令：'+uid);if(sent&&name)renderDashboard()};
+  $('removeWhitelistBtn').onclick=async()=>{const uid=getUid();if(!uid)return;if(!confirm('確定要從 ESP32 動態白名單移除 '+uid+'？'))return;await sendCommand('REMOVE:'+uid,'⏳ 已送出移除白名單指令：'+uid)};
+  $('listWhitelistBtn').onclick=()=>sendCommand('LISTWL','⏳ 正在查詢 ESP32 動態白名單…');
+  document.querySelectorAll('.scan-setting-btn').forEach(btn=>btn.onclick=()=>sendCommand('SETSCAN:'+btn.dataset.scanMs,'⏳ 正在儲存關箱掃描時間…'));
+  $('clearDeviceLogBtn').onclick=async()=>{if(!cmdChar){status('請先連線至 RFID-Toolbox。');return}const confirmed=confirm('⚠️ 這會永久清除 ESP32 裝置內所有開箱、關箱、掃描與借用測試紀錄。\n\n白名單不會被刪除。\n\n確定要清除嗎？');if(!confirmed)return;await sendCommand('CLEAR','⏳ 正在清除 ESP32 裝置紀錄…')};
+})();
 </script>
 </body>
 </html>
