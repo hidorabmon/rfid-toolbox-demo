@@ -128,13 +128,14 @@
 <style id="unifiedStyles">
   .unified-shell{max-width:900px;margin:0 auto}#pasteInputCard{display:none}.dashboard-sync{display:flex;align-items:center;gap:10px;padding:13px 14px;margin-bottom:16px;border:1px solid #dbe8f5;border-radius:10px;background:#eef6fd;color:#245a86}.dashboard-sync .sync-icon{font-size:20px}.dashboard-sync b{display:block;font-size:14px}.dashboard-sync span:last-child{display:block;margin-top:2px;font-size:12px;color:#5e7182}.unified-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}.unified-brand{font-weight:750;font-size:18px}.unified-brand small{display:block;font-weight:400;font-size:12px;color:#777;margin-top:2px}.ble-chip{font-size:13px;background:#eef2f7;border-radius:999px;padding:7px 10px;color:#556;white-space:nowrap}.ble-chip.connected{background:#e8f8ec;color:#1e7d32}.view-tabs{display:flex;gap:7px;margin:0 0 14px;background:#e9eef2;padding:5px;border-radius:9px}.view-tab{flex:1;background:transparent;color:#556;border:0;border-radius:6px;font-weight:650;font-size:14px;padding:9px 10px;height:42px}.view-tab.active{background:#fff;color:#2383e2;box-shadow:0 1px 2px rgba(0,0,0,.08)}.app-panel{display:none}.app-panel.active{display:block}.controller-card .controller-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.controller-card .controller-actions button{width:auto}.controller-status{padding:11px 12px;border-radius:8px;background:#eef2f7;color:#556;font-size:14px;margin:10px 0}.controller-status.ok{background:#e8f8ec;color:#1e7d32}.controller-log{white-space:pre-wrap;margin:10px 0 0;background:#1f2930;color:#dff5e1;border-radius:8px;padding:12px;min-height:260px;max-height:430px;overflow:auto;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}.controller-note{font-size:13px;color:#777;margin:8px 0 0}.dashboard-panel .lang-toggle{margin-top:0}.controller-management{margin-top:16px;border-top:1px dashed #ddd;padding-top:10px}.controller-management summary{cursor:pointer;font-size:15px;font-weight:650;color:#555;padding:8px 0}.uid-row{display:flex;gap:8px;margin:10px 0}.uid-row input{flex:1;min-width:0;border:1px solid #ddd;border-radius:6px;padding:10px;font:14px ui-monospace,SFMono-Regular,monospace}.controller-management .management-actions{display:flex;gap:8px;flex-wrap:wrap}.controller-management .management-actions button{width:auto}.clear-zone{border-top:1px dashed #ead1cf;margin-top:14px;padding-top:14px}.clear-zone p{font-size:13px;color:#9b4b45;margin:0 0 9px}@media(max-width:480px){.uid-row{flex-wrap:wrap}.uid-row button{width:100%}.controller-management .management-actions{display:grid;grid-template-columns:1fr 1fr}.controller-management .management-actions button{width:100%;padding:10px 8px;font-size:14px}}@media(max-width:480px){.unified-header{align-items:flex-start}.unified-brand{font-size:17px}.view-tab{font-size:13px}.controller-card .controller-actions{display:grid;grid-template-columns:1fr 1fr}.controller-card .controller-actions button{width:100%;padding:10px 8px;font-size:14px}.controller-card .controller-actions button:first-child{grid-column:1/-1}}
 .scan-setting-current{display:inline-block;margin:4px 0 10px;padding:5px 9px;border-radius:999px;background:#eef6fd;color:#245a86;font-size:13px;font-weight:650}.scan-setting-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.scan-setting-actions button{width:100%;padding:10px 7px;height:auto;min-height:44px}.scan-setting-actions button.active{background:#d9ecff;color:#175c9c;box-shadow:inset 0 0 0 1px #2383e2}@media(max-width:480px){.scan-setting-actions{grid-template-columns:repeat(2,1fr)}}
+.tag-manager-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.tag-manager-controls select{flex:1;min-width:180px;border:1px solid #ddd;border-radius:6px;padding:10px;background:#fff;font-size:14px}.tag-manager-controls button{width:auto}.visible-tag-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.visible-tag{display:inline-flex;align-items:center;gap:7px;border:1px solid #dbe8f5;background:#f7fbff;border-radius:999px;padding:6px 8px 6px 10px;font-size:13px;color:#245a86}.visible-tag button{height:auto;min-height:28px;min-width:28px;padding:3px 7px;border-radius:999px;background:#fff;color:#9b4b45;border:1px solid #ead1cf;font-size:12px}.visible-tag button:hover{background:#fdecea}.tag-manager-note{font-size:13px;color:#777;margin:4px 0 0}@media(max-width:480px){.tag-manager-controls select,.tag-manager-controls button{width:100%}}
 </style>
 </head>
 <body>
 
 <div class="unified-shell">
   <header class="unified-header">
-    <div class="unified-brand">🧰 RFID Smart Toolbox<small>BLE 連線與工具狀態整合版</small></div>
+    <div class="unified-brand">🧰 RFID Smart Toolbox<small>BLE 連線與工具狀態整合版 v6.5</small></div>
     <div class="ble-chip" id="bleChip">● 尚未連線</div>
   </header>
   <nav class="view-tabs" aria-label="工具箱功能">
@@ -223,6 +224,15 @@
 <details class="card">
   <summary id="advancedSummary"></summary>
   <div class="adv-section">
+    <h2 id="tagManagerTitle"></h2>
+    <p class="tag-manager-note" id="tagManagerDescription"></p>
+    <div class="tag-manager-controls">
+      <select id="tagManagerSelect" aria-label="選擇標籤"></select>
+      <button id="addVisibleTagBtn" type="button"></button>
+    </div>
+    <div class="visible-tag-list" id="visibleTagList"></div>
+  </div>
+  <div class="adv-section">
     <h2 id="historyTitle"></h2>
     <div id="historyTable"></div>
   </div>
@@ -267,6 +277,12 @@ const LANGS = {
     borrowerCol: "借走的人",
     toolCol: "借走的工具",
     advancedSummary: "🔧 進階資訊（除錯用，管理者可展開）",
+    tagManagerTitle: "🧪 工具箱狀態顯示標籤",
+    tagManagerDescription: "只控制本機 Dashboard 的工具箱狀態顯示；不會刪除 ESP32 紀錄或標籤資料。可把讀取率偏低的標籤暫時隱藏。",
+    addTagPlaceholder: "選擇要加入顯示的標籤…",
+    addTag: "➕ 加入顯示",
+    hideTag: "隱藏",
+    allTagsVisible: "目前沒有任何標籤顯示在工具箱狀態。",
     historyTitle: "🔁 今日借還歷程",
     historyEmpty: "目前沒有偵測到任何借出／歸還事件。",
     colTime: "時間", colTool: "工具", colAction: "動作", colPerson: "人",
@@ -308,6 +324,12 @@ const LANGS = {
     borrowerCol: "Borrowed by",
     toolCol: "Tool borrowed",
     advancedSummary: "🔧 Advanced info (for debugging, admins can expand)",
+    tagManagerTitle: "🧪 Toolbox status display tags",
+    tagManagerDescription: "Controls only this browser's toolbox status display. It never deletes ESP32 logs or tag data; temporarily hide tags with low read success.",
+    addTagPlaceholder: "Select a tag to show…",
+    addTag: "➕ Add to display",
+    hideTag: "Hide",
+    allTagsVisible: "No tags are currently displayed in Toolbox Status.",
     historyTitle: "🔁 Today's Borrow / Return History",
     historyEmpty: "No borrow/return events detected yet.",
     colTime: "Time", colTool: "Tool", colAction: "Action", colPerson: "Person",
@@ -357,7 +379,29 @@ const TAG_TABLE = {
 // 👉 Demo 展示用標籤清單：目前 Demo 只保留這 5 顆標籤（工具），「工具箱狀態」只會顯示這幾顆，
 // 其餘標籤資料仍完整保留在下方「進階資訊」區塊。等正式定案標籤編號對應表後，
 // 請把下面換成實際要展示的 5 個標籤編號（並同步更新上面 TAG_TABLE 的工具名稱）。
-const DEMO_TAG_NUMBERS = ["02", "04", "05", "08", "12"];
+const DEFAULT_DEMO_TAG_NUMBERS = ["02", "04", "05", "08", "12"];
+const VISIBLE_TAGS_STORAGE_KEY = "rfidToolboxVisibleStatusTagsV1";
+const ESTIMATED_REBOOT_GAP_MS = 60 * 1000; // Demo estimate: one minute between a recorded power cycle and the next event.
+
+function getVisibleStatusTags() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(VISIBLE_TAGS_STORAGE_KEY) || "null");
+    if (Array.isArray(saved)) return saved.filter(t => Object.prototype.hasOwnProperty.call(TAG_TABLE, t));
+  } catch (_) {}
+  return [...DEFAULT_DEMO_TAG_NUMBERS];
+}
+function saveVisibleStatusTags(tags) {
+  localStorage.setItem(VISIBLE_TAGS_STORAGE_KEY, JSON.stringify([...new Set(tags)].filter(t => Object.prototype.hasOwnProperty.call(TAG_TABLE, t))));
+}
+function renderTagManager() {
+  const Lz = LANGS[lang];
+  const visible = getVisibleStatusTags().sort((a,b) => Number(a) - Number(b));
+  const select = document.getElementById("tagManagerSelect");
+  const list = document.getElementById("visibleTagList");
+  select.innerHTML = `<option value="">${Lz.addTagPlaceholder}</option>` + Object.keys(TAG_TABLE).filter(t => !visible.includes(t)).sort((a,b) => Number(a)-Number(b)).map(t => `<option value="${t}">${t} — ${tagLabel(t)}</option>`).join("");
+  list.innerHTML = visible.length ? visible.map(t => `<span class="visible-tag">${t} · ${tagLabel(t)}<button type="button" data-hide-tag="${t}" aria-label="${Lz.hideTag} ${t}">×</button></span>`).join("") : `<span class="empty-note">${Lz.allTagsVisible}</span>`;
+  list.querySelectorAll("[data-hide-tag]").forEach(btn => btn.onclick = () => { saveVisibleStatusTags(getVisibleStatusTags().filter(t => t !== btn.dataset.hideTag)); renderDashboard(); });
+}
 
 const CARD_TABLE = {
   "21:47:28:07": { zh: "John", en: "John" },
@@ -402,9 +446,27 @@ function parseLog(raw) {
     const tag = line.slice(idx1 + 1, idx2);
     const status = line.slice(idx2 + 1);
     if (!/^\d+$/.test(millisStr)) continue;
-    events.push({ millis: parseInt(millisStr, 10), tag, status });
+    // ESP32 millis() resets after power is removed. Keep log-file append order,
+    // which is the only reliable chronology across reboots, and label each boot.
+    const millis = parseInt(millisStr, 10);
+    const previous = events.length ? events[events.length - 1] : null;
+    const boot = previous ? previous.boot + (millis < previous.millis ? 1 : 0) : 0;
+    events.push({ millis, tag, status, order: events.length, boot });
   }
-  events.sort((a, b) => a.millis - b.millis);
+  let virtualMillis = 0;
+  for (let i = 0; i < events.length; i++) {
+    const current = events[i];
+    if (i === 0) {
+      current.virtualMillis = 0;
+      continue;
+    }
+    const previous = events[i - 1];
+    const elapsed = current.boot === previous.boot
+      ? Math.max(1, current.millis - previous.millis)
+      : ESTIMATED_REBOOT_GAP_MS + Math.max(0, current.millis);
+    virtualMillis += elapsed;
+    current.virtualMillis = virtualMillis;
+  }
   return events;
 }
 
@@ -414,21 +476,24 @@ function buildCycles(events) {
   let pending = null;
   for (const e of events) {
     if (e.tag !== "SYSTEM" && e.tag !== "CLOSE_SCAN" && (e.status === "AUTHORIZED" || e.status === "AUTHORIZED_SESSION_STARTED" || e.status === "DENIED")) {
-      if (e.status === "AUTHORIZED" || e.status === "AUTHORIZED_SESSION_STARTED") lastAuthorized = { uid: e.tag, millis: e.millis };
+      if (e.status === "AUTHORIZED" || e.status === "AUTHORIZED_SESSION_STARTED") lastAuthorized = { uid: e.tag, millis: e.millis, boot: e.boot, order: e.order };
     } else if (e.tag === "SYSTEM" && e.status === "BOX_OPEN") {
-      pending = { actorUid: lastAuthorized ? lastAuthorized.uid : null, openMillis: e.millis, closeMillis: null, scanMillis: null, tags: null };
+      pending = { actorUid: lastAuthorized ? lastAuthorized.uid : null, openMillis: e.millis, openVirtual: e.virtualMillis, openBoot: e.boot, openOrder: e.order, closeMillis: null, closeVirtual: null, closeBoot: null, closeOrder: null, scanMillis: null, scanVirtual: null, scanBoot: null, scanOrder: null, tags: null };
     } else if (e.tag === "SYSTEM" && e.status === "BOX_CLOSED") {
-      if (pending) pending.closeMillis = e.millis;
+      if (pending) { pending.closeMillis = e.millis; pending.closeVirtual = e.virtualMillis; pending.closeBoot = e.boot; pending.closeOrder = e.order; }
     } else if (e.tag === "CLOSE_SCAN") {
       const m = e.status.match(/tags:\s*(.*)$/i);
       const nums = m ? m[1].split("|").map(s => s.trim()).filter(Boolean) : [];
       if (pending) {
         pending.scanMillis = e.millis;
+        pending.scanVirtual = e.virtualMillis;
+        pending.scanBoot = e.boot;
+        pending.scanOrder = e.order;
         pending.tags = nums;
         cycles.push(pending);
         pending = null;
       } else {
-        cycles.push({ actorUid: lastAuthorized ? lastAuthorized.uid : null, openMillis: null, closeMillis: null, scanMillis: e.millis, tags: nums });
+        cycles.push({ actorUid: lastAuthorized ? lastAuthorized.uid : null, openMillis: null, openBoot: null, openOrder: null, closeMillis: null, closeVirtual: null, closeBoot: null, closeOrder: null, scanMillis: e.millis, scanBoot: e.boot, scanOrder: e.order, tags: nums });
       }
     }
   }
@@ -449,23 +514,23 @@ function diffCycles(cycles) {
       for (const t of presentSet) {
         if (!curSet.has(t)) {
           borrowMap.set(t, { borrowerUid: c.actorUid, unknown: false });
-          history.push({ tag: t, action: "borrowed", actorUid: c.actorUid, atMillis: c.openMillis != null ? c.openMillis : c.scanMillis });
+          history.push({ tag: t, action: "borrowed", actorUid: c.actorUid, atMillis: c.openMillis != null ? c.openMillis : c.scanMillis, atVirtual: c.openVirtual != null ? c.openVirtual : c.scanVirtual, atBoot: c.openBoot != null ? c.openBoot : c.scanBoot, order: c.scanOrder ?? c.openOrder ?? 0 });
         }
       }
       for (const t of curSet) {
         if (!presentSet.has(t)) {
           borrowMap.delete(t);
-          history.push({ tag: t, action: "returned", actorUid: c.actorUid, atMillis: c.closeMillis != null ? c.closeMillis : c.scanMillis });
+          history.push({ tag: t, action: "returned", actorUid: c.actorUid, atMillis: c.closeMillis != null ? c.closeMillis : c.scanMillis, atVirtual: c.closeVirtual != null ? c.closeVirtual : c.scanVirtual, atBoot: c.closeBoot != null ? c.closeBoot : c.scanBoot, order: c.scanOrder ?? c.closeOrder ?? 0 });
         }
       }
     }
     presentSet = curSet;
   }
-  history.sort((a, b) => (a.atMillis ?? 0) - (b.atMillis ?? 0));
+  history.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   return { presentSet, borrowMap, history };
 }
 
-function renderToolItem(tagNum, isBorrowed, borrowerUid, history, anchorMillis, syncDate, Lz) {
+function renderToolItem(tagNum, isBorrowed, borrowerUid, history, anchorVirtualMillis, syncDate, Lz) {
   const tagHistory = history.filter(h => h.tag === tagNum);
   const icon = isBorrowed ? "🔴" : "🟢";
   const label = tagLabel(tagNum);
@@ -476,8 +541,9 @@ function renderToolItem(tagNum, isBorrowed, borrowerUid, history, anchorMillis, 
   if (tagHistory.length === 0) {
     historyHtml = `<div class="empty-note">${Lz.noToolHistory}</div>`;
   } else {
-    const rows = tagHistory.map(h => {
-      const approx = fmtApproxTime(h.atMillis, anchorMillis, syncDate);
+    // history is stored in log append order (oldest → newest); show newest first in each tool card.
+    const rows = tagHistory.slice().reverse().map(h => {
+      const approx = fmtEstimatedTime(h.atVirtual, anchorVirtualMillis, syncDate);
       const timeText = approx ? approx : (h.atMillis != null ? `T+${h.atMillis}ms` : "\u2014");
       const actionText = h.action === "borrowed" ? Lz.actionBorrowed : Lz.actionReturned;
       const personName = h.actorUid ? cardLabel(h.actorUid) : Lz.unknownBorrower;
@@ -492,13 +558,13 @@ function renderToolItem(tagNum, isBorrowed, borrowerUid, history, anchorMillis, 
   </details>`;
 }
 
-function renderToolStatusSections(presentSet, borrowMap, history, anchorMillis, syncDate, Lz) {
+function renderToolStatusSections(presentSet, borrowMap, history, anchorVirtualMillis, syncDate, Lz) {
   const notBorrowedEl = document.getElementById("notBorrowedSection");
   const borrowedEl = document.getElementById("borrowedSection");
 
   const notBorrowed = [];
   const borrowed = [];
-  const sortedDemoTags = [...DEMO_TAG_NUMBERS].sort((a, b) => Number(a) - Number(b));
+  const sortedDemoTags = getVisibleStatusTags().sort((a, b) => Number(a) - Number(b));
 
   for (const t of sortedDemoTags) {
     const isBorrowed = presentSet ? !presentSet.has(t) : false;
@@ -506,22 +572,22 @@ function renderToolStatusSections(presentSet, borrowMap, history, anchorMillis, 
   }
 
   notBorrowedEl.innerHTML = notBorrowed.length
-    ? notBorrowed.map(t => renderToolItem(t, false, null, history, anchorMillis, syncDate, Lz)).join("")
+    ? notBorrowed.map(t => renderToolItem(t, false, null, history, anchorVirtualMillis, syncDate, Lz)).join("")
     : `<div class="empty-note">${Lz.noToolsInSection}</div>`;
 
   borrowedEl.innerHTML = borrowed.length
     ? borrowed.map(t => {
         const info = borrowMap.get(t);
         const borrowerUid = info && info.borrowerUid ? info.borrowerUid : null;
-        return renderToolItem(t, true, borrowerUid, history, anchorMillis, syncDate, Lz);
+        return renderToolItem(t, true, borrowerUid, history, anchorVirtualMillis, syncDate, Lz);
       }).join("")
     : `<div class="empty-note">${Lz.noToolsInSection}</div>`;
 }
 
-function fmtApproxTime(eventMillis, anchorMillis, syncDate) {
-  if (eventMillis == null || anchorMillis == null || !syncDate || isNaN(syncDate.getTime())) return null;
-  const approx = new Date(syncDate.getTime() - (anchorMillis - eventMillis));
-  return approx.toLocaleString(lang === "zh" ? "zh-TW" : "en-US", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+function fmtEstimatedTime(eventVirtualMillis, anchorVirtualMillis, syncDate) {
+  if (eventVirtualMillis == null || anchorVirtualMillis == null || !syncDate || isNaN(syncDate.getTime())) return "";
+  const estimate = new Date(syncDate.getTime() - (anchorVirtualMillis - eventVirtualMillis));
+  return estimate.toLocaleString(lang === "zh" ? "zh-TW" : "en-US", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 async function pasteAndParse() {
@@ -545,10 +611,11 @@ function renderDashboard() {
   const raw = document.getElementById("logInput").value;
   const events = parseLog(raw);
   document.getElementById("parseStatus").textContent = events.length ? Lz.parseOk(events.length) : Lz.parseEmpty;
+  renderTagManager();
 
   const syncInput = document.getElementById("syncTime").value;
   const syncDate = syncInput ? new Date(syncInput) : null;
-  const anchorMillis = events.length ? Math.max(...events.map(e => e.millis)) : null;
+  const anchorVirtualMillis = events.length ? events[events.length - 1].virtualMillis : null;
 
   let authorized = 0, denied = 0;
   const cardEvents = [];
@@ -582,20 +649,20 @@ function renderDashboard() {
   if (cycles.length === 0 || presentSet === null) {
     statusBannerEl.innerHTML = `<div class="status-banner info-bg">${Lz.statusUnknown}</div>`;
   } else {
-    const demoMissing = DEMO_TAG_NUMBERS.filter(t => !presentSet.has(t));
+    const demoMissing = getVisibleStatusTags().filter(t => !presentSet.has(t));
     statusBannerEl.innerHTML = demoMissing.length === 0
       ? `<div class="status-banner ok-bg">${Lz.statusOk}</div>`
       : `<div class="status-banner warn-bg">${Lz.statusWarn(demoMissing.length)}</div>`;
   }
 
-  renderToolStatusSections(presentSet, borrowMap, history, anchorMillis, syncDate, Lz);
+  renderToolStatusSections(presentSet, borrowMap, history, anchorVirtualMillis, syncDate, Lz);
 
   const historyEl = document.getElementById("historyTable");
   if (history.length === 0) {
     historyEl.innerHTML = `<div class="empty-note">${Lz.historyEmpty}</div>`;
   } else {
     const rows = history.map(h => {
-      const approx = fmtApproxTime(h.atMillis, anchorMillis, syncDate);
+      const approx = fmtEstimatedTime(h.atVirtual, anchorVirtualMillis, syncDate);
       const timeText = approx ? `~${approx}` : (h.atMillis != null ? `T+${h.atMillis}ms` : "—");
       const actionText = h.action === "borrowed" ? Lz.actionBorrowed : Lz.actionReturned;
       const personName = h.actorUid ? cardLabel(h.actorUid) : Lz.unknownBorrower;
@@ -626,7 +693,7 @@ function renderDashboard() {
     for (const e of cardEvents) {
       const who = cardLabel(e.tag);
       const badge = (e.status === "AUTHORIZED" || e.status === "AUTHORIZED_SESSION_STARTED") ? `<span class="badge ok">AUTHORIZED</span>` : `<span class="badge warn">DENIED</span>`;
-      rows += `<tr><td>T+${e.millis}ms</td><td>${e.tag}</td><td>${who}</td><td>${badge}</td></tr>`;
+      rows += `<tr><td>${fmtEstimatedTime(e.virtualMillis, anchorVirtualMillis, syncDate)}</td><td>${e.tag}</td><td>${who}</td><td>${badge}</td></tr>`;
     }
     cardLogEl.innerHTML = `<table><thead><tr><th>${Lz.colTime}</th><th>${Lz.colUid}</th><th>${Lz.colHolder}</th><th>${Lz.colResult}</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
@@ -635,10 +702,10 @@ function renderDashboard() {
   if (timeline.length === 0) {
     timelineEl.innerHTML = `<div class="empty-note">${Lz.noTimeline}</div>`;
   } else {
-    timeline.sort((a, b) => a.millis - b.millis);
+    timeline.sort((a, b) => a.order - b.order);
     let rows = "";
     for (const t of timeline) {
-      rows += `<tr><td class="muted">T+${t.millis}ms</td><td>${t.icon}</td><td>${t.label}</td></tr>`;
+      rows += `<tr><td class="muted">${fmtEstimatedTime(t.virtualMillis, anchorVirtualMillis, syncDate)}</td><td>${t.icon}</td><td>${t.label}</td></tr>`;
     }
     timelineEl.innerHTML = `<table><tbody>${rows}</tbody></table>`;
   }
@@ -657,6 +724,9 @@ function updateStaticText() {
   document.getElementById("summaryTitle").textContent = Lz.summaryTitle;
   document.getElementById("statusTitle").textContent = Lz.statusTitle;
   document.getElementById("advancedSummary").textContent = Lz.advancedSummary;
+  document.getElementById("tagManagerTitle").textContent = Lz.tagManagerTitle;
+  document.getElementById("tagManagerDescription").textContent = Lz.tagManagerDescription;
+  document.getElementById("addVisibleTagBtn").textContent = Lz.addTag;
   document.getElementById("historyTitle").textContent = Lz.historyTitle;
   document.getElementById("scanCompareTitle").textContent = Lz.scanCompareTitle;
   document.getElementById("cardLogTitle").textContent = Lz.cardLogTitle;
@@ -715,6 +785,7 @@ renderDashboard();
   function appendEvent(message){const event=message.trim();if(event.startsWith('SCAN_SETTING:'))updateScanSetting(event.split(':')[1]);if(event.startsWith('SCAN_SETTING_SAVED:')){updateScanSetting(event.split(':')[1]);status('✅ 關箱掃描時間已儲存至 ESP32。',true)}if(event.startsWith('SCAN_SETTING_REJECTED:'))status('❌ 不支援的掃描時間設定。');if(event.toUpperCase()==='CLEARED'){setLog('millis,tag,status','✅ ESP32 測試紀錄已清除；Dashboard 已重設。');return}const old=$('bleLog').textContent==='尚未接收裝置紀錄。'?'':$('bleLog').textContent;setLog((old?old+'\n':'')+'[EVENT] '+event,'✅ 收到裝置即時事件；工具看板已同步。')}
   function onDumpChunk(event){const bytes=new Uint8Array(event.target.value.buffer);const text=new TextDecoder().decode(bytes);if(text.startsWith('##START:')){dumpParts=[];status('⏳ 正在下載完整紀錄…',true);return}if(text==='##EOF##'){setLog(dumpParts.join(''),'✅ 已匯入完整裝置紀錄；請切換到工具狀態看板。');return}dumpParts.push(text)}
   async function sendCommand(command, successText){if(!cmdChar){status('請先連線至 RFID-Toolbox。');return false}try{await cmdChar.writeValue(new TextEncoder().encode(command));status(successText,true);return true}catch(e){status('❌ 指令送出失敗：'+e.message);return false}}
+  $('addVisibleTagBtn').onclick=()=>{const tag=$('tagManagerSelect').value;if(!tag)return;saveVisibleStatusTags([...getVisibleStatusTags(),tag]);renderDashboard()};
   $('bleConnectBtn').onclick=async()=>{if(!navigator.bluetooth){status('❌ 此瀏覽器不支援 Web Bluetooth，請用 Chrome 開啟。');return}try{device=await navigator.bluetooth.requestDevice({filters:[{name:'RFID-Toolbox'}],optionalServices:[SERVICE_UUID]});const server=await device.gatt.connect();const service=await server.getPrimaryService(SERVICE_UUID);[readChar,notifyChar,dumpChar,cmdChar]=await Promise.all([service.getCharacteristic(CHAR_READ_UUID),service.getCharacteristic(CHAR_NOTIFY_UUID),service.getCharacteristic(CHAR_DUMP_UUID),service.getCharacteristic(CHAR_CMD_UUID)]);await notifyChar.startNotifications();notifyChar.addEventListener('characteristicvaluechanged',e=>appendEvent(new TextDecoder().decode(e.target.value)));await dumpChar.startNotifications();dumpChar.addEventListener('characteristicvaluechanged',onDumpChunk);$('bleReadBtn').disabled=$('bleDumpBtn').disabled=false;$('bleChip').textContent='● 已連線：'+device.name;$('bleChip').classList.add('connected');status('✅ 已連線，可讀取裝置紀錄或管理白名單。',true);sendCommand('GETSCAN','⏳ 正在讀取目前關箱掃描時間…');device.addEventListener('gattserverdisconnected',()=>{status('連線已中斷。');$('bleChip').textContent='● 尚未連線';$('bleChip').classList.remove('connected');$('bleReadBtn').disabled=$('bleDumpBtn').disabled=true})}catch(e){status('❌ 連線失敗：'+e.message)}};
   $('bleReadBtn').onclick=async()=>{try{const value=await readChar.readValue();setLog(new TextDecoder().decode(value),'✅ 已讀取最新紀錄；工具看板已同步。')}catch(e){status('❌ 讀取失敗：'+e.message)}};
   $('bleDumpBtn').onclick=async()=>{dumpParts=[];await sendCommand('DUMP','⏳ 正在請求完整紀錄…')};
